@@ -21,7 +21,7 @@ export class ParkingStaysService {
     routingKey: 'parking.stay.queue',
     queue: 'parking.stay.queue',
   })
-  public async rpcHandler(msg: ParkingMessage) {
+  public async processParkingStay(msg: ParkingMessage) {
     // console.log('subscribe', msg);
 
     const parkingStay = await this.parkingStayModel.create(msg);
@@ -30,15 +30,27 @@ export class ParkingStaysService {
       exchange: '',
       routingKey: 'vehicle.queue',
       payload: { licensePlate: msg.licensePlate },
-      // timeout: 10000, // optional timeout for how long the request
-      // should wait before failing if no response is received
     });
-    console.log('response ', response);
+    // console.log('response ', response);
 
-    parkingStay.userId = response.userId;
+    const { userId, vehicleId, paymentMethod } = response;
+
+    parkingStay.vehicleId = vehicleId;
+    parkingStay.userId = userId;
     await parkingStay.save();
 
     // publish mensagem na fila de pagamento
+    const paymentMessage = {
+      userId,
+      parkingStaysId: parkingStay.id,
+      paymentMethod,
+    };
+
+    await this.amqpConnection.publish(
+      '',
+      'parking.payment.queue',
+      paymentMessage,
+    );
   }
 
   // @RabbitRPC({

@@ -29,6 +29,9 @@ export class ParkingStay {
   location: string;
 
   @Prop()
+  vehicleId: string;
+
+  @Prop()
   userId: string;
 
   @Field(() => Date)
