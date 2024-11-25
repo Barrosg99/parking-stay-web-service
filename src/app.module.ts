@@ -8,7 +8,7 @@ import {
 } from '@nestjs/apollo';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { ClientsModule, Transport } from '@nestjs/microservices';
+import { HealthController } from './app.controller';
 
 @Module({
   imports: [
@@ -25,7 +25,9 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
         const mongoDB = configService.get<string>('MONGO_DB');
 
         return {
-          uri: `mongodb://${mongoUser}:${mongoPassword}@${mongoHost}:${mongoPort}/${mongoDB}?authSource=admin`,
+          uri:
+            configService.get<string>('MONGO_URI') ||
+            `mongodb://${mongoUser}:${mongoPassword}@${mongoHost}:${mongoPort}/${mongoDB}?authSource=admin`,
         };
       },
       inject: [ConfigService],
@@ -42,5 +44,6 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
     }),
     ParkingStaysModule,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}

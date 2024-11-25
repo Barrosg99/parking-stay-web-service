@@ -39,6 +39,9 @@ export class ParkingStay {
   @Prop()
   userId?: string;
 
+  @Prop()
+  notFound?: Boolean;
+
   @Field(() => Date)
   createdAt: Date;
 

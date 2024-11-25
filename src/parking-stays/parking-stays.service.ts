@@ -22,31 +22,35 @@ export class ParkingStaysService {
     queue: 'parking.stay.queue',
   })
   public async processParkingStay(msg: ParkingMessage) {
-    const parkingStay = await this.parkingStayModel.create(msg);
-
     const response = await this.amqpConnection.request<any>({
       exchange: '',
       routingKey: 'vehicle.queue',
       payload: { licensePlate: msg.licensePlate },
     });
 
-    const { userId, vehicleId, paymentMethod } = response;
+    const { userId, vehicleId, paymentMethod, notFound } = response;
 
-    parkingStay.vehicleId = vehicleId;
-    parkingStay.userId = userId;
-    await parkingStay.save();
+    let parkingStayData;
 
-    const paymentMessage = {
-      userId,
-      parkingStaysId: parkingStay.id,
-      paymentMethod,
-    };
+    if (notFound) {
+      parkingStayData = { ...msg, notFound };
+    } else {
+      parkingStayData = { ...msg, vehicleId, userId };
 
-    await this.amqpConnection.publish(
-      '',
-      'parking.payment.queue',
-      paymentMessage,
-    );
+      const parkingStay = await this.parkingStayModel.create(parkingStayData);
+
+      const paymentMessage = {
+        userId,
+        parkingStaysId: parkingStay.id,
+        paymentMethod,
+      };
+
+      await this.amqpConnection.publish(
+        '',
+        'parking.payment.queue',
+        paymentMessage,
+      );
+    }
   }
 
   async postMessageParkingStayQueue(payload: ParkingMessage): Promise<Boolean> {
