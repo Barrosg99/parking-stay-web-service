@@ -22,8 +22,6 @@ export class ParkingStaysService {
     queue: 'parking.stay.queue',
   })
   public async processParkingStay(msg: ParkingMessage) {
-    // console.log('subscribe', msg);
-
     const parkingStay = await this.parkingStayModel.create(msg);
 
     const response = await this.amqpConnection.request<any>({
@@ -31,7 +29,6 @@ export class ParkingStaysService {
       routingKey: 'vehicle.queue',
       payload: { licensePlate: msg.licensePlate },
     });
-    // console.log('response ', response);
 
     const { userId, vehicleId, paymentMethod } = response;
 
@@ -39,7 +36,6 @@ export class ParkingStaysService {
     parkingStay.userId = userId;
     await parkingStay.save();
 
-    // publish mensagem na fila de pagamento
     const paymentMessage = {
       userId,
       parkingStaysId: parkingStay.id,
@@ -53,29 +49,15 @@ export class ParkingStaysService {
     );
   }
 
-  // @RabbitRPC({
-  //   exchange: 'exchange1',
-  //   routingKey: 'vehicle_queue',
-  //   queue: 'vehicle_queue',
-  // })
-  // public async rpcHandler2(msg) {
-  //   console.log('rpc', msg);
-
-  //   return {
-  //     response: 42,
-  //   };
-  // }
-
-  async postMessageParkingStayQueue(payload: ParkingMessage) {
+  async postMessageParkingStayQueue(payload: ParkingMessage): Promise<Boolean> {
     return await this.amqpConnection.publish('', 'parking.stay.queue', payload);
+  }
 
-    // const response = await this.amqpConnection.request<any>({
-    //   exchange: 'exchange1',
-    //   routingKey: 'vehicle_queue',
-    //   payload,
-    //   // timeout: 10000, // optional timeout for how long the request
-    //   // should wait before failing if no response is received
-    // });
-    // console.log('response ', response);
+  async find(params): Promise<ParkingStay[]> {
+    return await this.parkingStayModel.find(params);
+  }
+
+  async findOne(id: string): Promise<ParkingStay> {
+    return this.parkingStayModel.findById(id);
   }
 }

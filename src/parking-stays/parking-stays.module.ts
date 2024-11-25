@@ -11,12 +11,6 @@ import { ParkingStay, ParkingStaySchema } from './models/parkint-stay.model';
       { name: ParkingStay.name, schema: ParkingStaySchema },
     ]),
     RabbitMQModule.forRoot(RabbitMQModule, {
-      // exchanges: [
-      //   {
-      //     name: 'exchange1',
-      //     type: 'direct',
-      //   },
-      // ],
       uri: 'amqp://guest:guest@localhost:5672',
       connectionInitOptions: { wait: false },
     }),

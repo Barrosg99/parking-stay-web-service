@@ -1,9 +1,11 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument } from 'mongoose';
-import { Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { Directive, Field, ID, Int, ObjectType } from '@nestjs/graphql';
+import { Vehicle } from './vehicle.model';
 
 @Schema({ timestamps: true })
 @ObjectType()
+@Directive('@key(fields: "id")')
 export class ParkingStay {
   @Field(() => ID)
   id: string;
@@ -29,10 +31,13 @@ export class ParkingStay {
   location: string;
 
   @Prop()
-  vehicleId: string;
+  vehicleId?: string;
+
+  @Field((type) => Vehicle)
+  vehicle?: Vehicle;
 
   @Prop()
-  userId: string;
+  userId?: string;
 
   @Field(() => Date)
   createdAt: Date;
